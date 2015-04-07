@@ -24,6 +24,22 @@ exports.register = function(server, options, next) {
 
       }
     },
+    // READING FROM MONGO
+    {
+      method: 'GET',
+      path: '/mongo',
+      handler: function (request, reply) {
+
+        console.log('[GET]    ' + server.info.uri + '/');
+
+        var db   = request.server.plugins['hapi-mongodb'].db;
+        db.collection('students').findOne({ "name": "fer" }, function(err, result) {
+          if (err) return reply('Internal MongoDB error', err);
+          console.log( result )
+          reply( result )
+        });
+      }
+    },
     // LIST ALL THE ANIMALS
     {
       method: 'GET',

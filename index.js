@@ -8,12 +8,21 @@ server.connection({
   routes: {cors: true}
 });
 
-var plugins = [{ register: require('./routes/animals.js') }];
+var plugins = [
+  {
+    register: require('./routes/animals.js')
+  },
+  {
+    // https://www.npmjs.com/package/hapi-mongodb
+    register: require('hapi-mongodb'),
+    options: { "url": "mongodb://127.0.0.1:27017/db_wdi", "settings": {"db":{"native_parser": false }}}
+  }
+];
 
 server.register(plugins, function (err) {
   if (err) { throw err; }
 
   server.start(function () {
-    server.log('info', 'Server running at: ' + server.info.uri);
+    console.log('info', 'Server running at: ' + server.info.uri);
   });
 });
