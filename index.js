@@ -1,23 +1,19 @@
 var Hapi = require('hapi');
- 
+
 var server = new Hapi.Server();
- 
+
 server.connection({
-    host: 'localhost',
-    port: 8000,
-    routes: {cors: true}
+  host: 'localhost',
+  port: 8000,
+  routes: {cors: true}
 });
- 
-// This is where we delcare our plugins
-var plugins = [
-    { register: require('./routes/animals.js') }
-];
- 
+
+var plugins = [{ register: require('./routes/animals.js') }];
 
 server.register(plugins, function (err) {
-    if (err) { throw err; }
- 
-    server.start(function () {
-        server.log('info', 'Server running at: ' + server.info.uri);
-    });
+  if (err) { throw err; }
+
+  server.start(function () {
+    server.log('info', 'Server running at: ' + server.info.uri);
+  });
 });
