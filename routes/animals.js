@@ -30,12 +30,15 @@ exports.register = function(server, options, next) {
       path: '/mongo',
       handler: function (request, reply) {
 
-        console.log('[GET]    ' + server.info.uri + '/');
+        console.log('[GET]    ' + server.info.uri + '/mongo');
 
         var db   = request.server.plugins['hapi-mongodb'].db;
-        db.collection('students').findOne({ "name": "fer" }, function(err, result) {
+        
+        // reply (db);
+
+        db.collection('animals').findOne({ "name": "test" }, function(err, result) {
           if (err) return reply('Internal MongoDB error', err);
-          console.log( result )
+          console.log( result );
           reply( result )
         });
       }
@@ -92,7 +95,22 @@ exports.register = function(server, options, next) {
 
           var newAnimal = request.payload.animal;
           animals.push(newAnimal);
-          reply(newAnimal);
+          // reply(newAnimal);
+
+          var animal = {
+            name: request.payload.animal.name,
+            sound: request.payload.animal.sound
+          };
+
+          var db = request.server.plugins['hapi-mongodb'].db;
+
+          db.collection('animals').insert(animal, {w:1}, function (err, doc){
+            if (err) {
+              return reply(Hapi.error.internal('Internal MongoDB error', err));
+            } else {
+              reply(doc);
+            }
+          });
         },
 
         // https://github.com/hapijs/joi
