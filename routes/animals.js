@@ -3,14 +3,6 @@ var Joi = require('joi');
 
 
 exports.register = function(server, options, next) {
-  // This is our storage of animals
-  var animals = [
-    {name: 'Cat',       sound: 'meow!'},
-    {name: 'Dog',       sound: 'woof!'},
-    {name: 'Frog',      sound: 'squish!'},
-    {name: 'Squirrel',  sound: 'munch munch munch!'}
-  ];
-
   // Declaring routes here
   server.route([
     // INDEX METHOD
@@ -24,34 +16,21 @@ exports.register = function(server, options, next) {
 
       }
     },
-    // READING FROM MONGO
-    {
-      method: 'GET',
-      path: '/mongo',
-      handler: function (request, reply) {
-
-        console.log('[GET]    ' + server.info.uri + '/mongo');
-
-        var db   = request.server.plugins['hapi-mongodb'].db;
-        
-        // reply (db);
-
-        db.collection('animals').findOne({ "name": "test" }, function(err, result) {
-          if (err) return reply('Internal MongoDB error', err);
-          console.log( result );
-          reply( result )
-        });
-      }
-    },
     // LIST ALL THE ANIMALS
     {
       method: 'GET',
       path: '/animals',
       handler: function (request, reply) {
 
-        console.log('[GET]    ' + server.info.uri + '/animals');
-        reply(animals); // Return all of our animals
+        console.log('[GET]    ' + server.info.uri + '/mongo');
 
+        var db   = request.server.plugins['hapi-mongodb'].db;
+        
+        db.collection('animals').find().toArray(function(err, result) {
+          if (err) return reply('Internal MongoDB error', err);
+          console.log( result );
+          reply( result );
+        });
       }
     },
     // GET A RANDOM ANIMAL
@@ -62,9 +41,15 @@ exports.register = function(server, options, next) {
 
         console.log('[GET]    ' + server.info.uri + '/animals/random');
 
-        var id = Math.floor(Math.random() * animals.length);
-        reply(animals[id]);
+        var db   = request.server.plugins['hapi-mongodb'].db;
+        
+        db.collection('animals').find().toArray(function(err, result) {
+          if (err) return reply('Internal MongoDB error', err);
+          console.log( result );
 
+          var id = Math.floor(Math.random() * result.length);
+          reply( result[id] );
+        });
       }
     },
     // GET A PARTICULAR ANIMAL
@@ -75,13 +60,16 @@ exports.register = function(server, options, next) {
 
         console.log('[GET]    ' + server.info.uri + '/animals/' + request.params.id);
 
-        // encodeURIComponent escapes all characters except the following:
-        // alphabetic, decimal digits, - _ . ! ~ * ' ( )
-        //
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
         var id = encodeURIComponent(request.params.id)
-        reply(animals[id]);
 
+        var db   = request.server.plugins['hapi-mongodb'].db;
+        var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+        
+        db.collection('animals').findOne({ "_id": ObjectId(id)}, function(err, result) {
+          if (err) return reply('Internal MongoDB error', err);
+          console.log( result );
+          reply( result );
+        });
       }
     },
     // CREATE A NEW ANIMAL
@@ -93,10 +81,6 @@ exports.register = function(server, options, next) {
         handler: function(request, reply) {
           console.log('[POST]   ' + server.info.uri + '/animals/' );
 
-          var newAnimal = request.payload.animal;
-          animals.push(newAnimal);
-          // reply(newAnimal);
-
           var animal = {
             name: request.payload.animal.name,
             sound: request.payload.animal.sound
@@ -104,7 +88,7 @@ exports.register = function(server, options, next) {
 
           var db = request.server.plugins['hapi-mongodb'].db;
 
-          db.collection('animals').insert(animal, {w:1}, function (err, doc){
+          db.collection('animals').insert(animal, function (err, doc){
             if (err) {
               return reply(Hapi.error.internal('Internal MongoDB error', err));
             } else {
@@ -134,8 +118,17 @@ exports.register = function(server, options, next) {
         if (animals.length <= request.params.id) {
            return reply('No animal found!!').code(404);
         }
-        animals.splice(request.params.id, 1);
-        reply(true);
+        
+        var id = encodeURIComponent(request.params.id)
+
+        var db   = request.server.plugins['hapi-mongodb'].db;
+        var ObjectId = request.server.plugins['hapi-mongodb'].ObjectID;
+        
+        db.collection('animals').remove({ "_id": ObjectId(id)}, function(err, result) {
+          if (err) return reply('Internal MongoDB error', err);
+          console.log( result );
+          reply( result );
+        });
       }
     }
   ]);
