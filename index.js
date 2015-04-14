@@ -7,7 +7,16 @@ server.connection({
   routes: {cors: true}
 });
 
-var plugins = [{ register: require('./routes/quotes.js') }];
+var plugins = [
+  { register: require('./routes/quotes.js') },
+  {
+    register: require('hapi-mongodb'),
+    options: {
+      url : "mongodb://127.0.0.1/harry",
+      settings:  {db: {"native_parser": false}}
+    }
+  }
+];
 
 server.register(plugins, function (err) {
   if (err) { throw err; }
