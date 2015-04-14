@@ -97,6 +97,9 @@ exports.register = function(server, options, next) {
       path: '/quotes/search/{searchQuery}',
       handler: function (request, reply) {
         var db = request.server.plugins['hapi-mongodb'].db;
+        // To make this work, we need to create an index in MongoDB
+        // http://docs.mongodb.org/manual/reference/method/db.collection.createIndex/#db.collection.createIndex
+        // > db.quotes.createIndex({quote: "text"})
         var query = { "$text": { "$search": request.params.searchQuery} };
 
         db.collection('quotes').find(query).toArray(function(err, result){
